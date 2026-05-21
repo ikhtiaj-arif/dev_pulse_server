@@ -68,7 +68,7 @@ const getUsersFromDB = async () => {
      SELECT * FROM users
     `);
   delete result.rows[0].password;
-  return result.rows[0];
+  return result.rows;
 };
 
 export const userService = { createUserIntoDB, loginUserDB, getUsersFromDB };
