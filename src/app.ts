@@ -4,7 +4,8 @@ import express, {
   type Response,
 } from "express";
 import config from "./config";
-import userRouter from "./modules/users/user.routes";
+import { userRouter } from "./modules/users/user.routes";
+ 
 
 const app: Application = express();
 const port = config.port;

@@ -1,9 +1,8 @@
-import { Router, type Request, type Response } from "express";
+import { Router } from "express";
+import { userController } from "./user.controller";
 
-const userRouter = Router();
+const router = Router();
 
-userRouter.post("/signup", (req: Request, res: Response) => {
-  res.send("jo")
-});
+router.post("/signup", userController.signupUser);
 
-export default userRouter;
+export const userRouter = router;
