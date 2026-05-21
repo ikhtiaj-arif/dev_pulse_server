@@ -31,7 +31,7 @@ const createIssueIntoDB = async (payload: IIssue, reporterId: string) => {
     [title, description, type, status, reporterId],
   );
 
-  return result.rows[0];
+  return result;
 };
 
 const getIssuesFromDB = async (params: any) => {
@@ -70,7 +70,7 @@ const getSingleIssueFromDB = async (id: string) => {
     [id],
   );
 
-  return result.rows[0];
+  return result;
 };
 const updateIssueDB = async (payload: any, id: string) => {
   //   return { payload, id };
@@ -109,12 +109,22 @@ const updateIssueDB = async (payload: any, id: string) => {
 
 
 
-  return result.rows[0];
+  return result;
 };
+
+const deleteIssueFromDB = async(id:string) => {
+    const result = await pool.query(`
+        DELETE FROM issues WHERE id=$1
+        `,[id])
+
+        return result
+}
+
+
 
 export const issuesService = {
   createIssueIntoDB,
   getIssuesFromDB,
   getSingleIssueFromDB,
-  updateIssueDB,
+  updateIssueDB,deleteIssueFromDB
 };
