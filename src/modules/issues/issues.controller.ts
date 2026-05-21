@@ -44,7 +44,7 @@ const getIssues = async (req: Request, res: Response) => {
 const getSingleIssue = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
- 
+
     const result = await issuesService.getSingleIssueFromDB(id as string);
     sendResponse((res = res), {
       status: 200,
@@ -61,5 +61,35 @@ const getSingleIssue = async (req: Request, res: Response) => {
     });
   }
 };
+const updateIssue = async (req: Request, res: Response) => {
+  try {
+    const { id: issueId } = req.params;
+    const { id: userId } = req.user as JwtPayload;
+    const payload = { userId, ...req.body };
 
-export const issuesController = { createIssue, getIssues, getSingleIssue };
+    const result = await issuesService.updateIssueDB(
+      payload,
+      issueId as string,
+    );
+    sendResponse((res = res), {
+      status: 200,
+      success: true,
+      //   message: "Issue created successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    sendResponse((res = res), {
+      status: 500,
+      success: false,
+      message: error.message,
+      error: error,
+    });
+  }
+};
+
+export const issuesController = {
+  createIssue,
+  getIssues,
+  getSingleIssue,
+  updateIssue,
+};
