@@ -14,7 +14,7 @@ const signupUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     sendResponse((res = res), {
       status: 500,
-      success: true,
+      success: false,
       message: "User registration failed",
       error: error,
     });
@@ -32,11 +32,29 @@ const loginUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     sendResponse((res = res), {
       status: 500,
+      success: false,
+      message: error.message,
+      error: error,
+    });
+  }
+};
+const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const result = await userService.getUsersFromDB();
+    sendResponse((res = res), {
+      status: 200,
       success: true,
+      message: "Users retrieved successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    sendResponse((res = res), {
+      status: 500,
+      success: false,
       message: error.message,
       error: error,
     });
   }
 };
 
-export const userController = { signupUser, loginUser };
+export const userController = { signupUser, loginUser, getAllUsers };

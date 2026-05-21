@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt, { hash } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { pool } from "../../_db";
 import config from "../../config";
@@ -7,7 +7,8 @@ import type { IUser } from "./auth.interface";
 const createUserIntoDB = async (payload: IUser) => {
   const { name, email, password, role } = payload;
 
-  const hashPassword = await bcrypt.hash(password, config.salt);
+  const hashPassword = await bcrypt.hash(password, 10);
+
   const result = await pool.query(
     `
     INSERT INTO users(name, email, password, role) VALUES($1,$2,$3,COALESCE($4, 'contributor'))
@@ -18,6 +19,7 @@ const createUserIntoDB = async (payload: IUser) => {
   delete result.rows[0].password;
   return result.rows[0];
 };
+
 const loginUserDB = async (payload: { email: string; password: string }) => {
   const { email, password } = payload;
 
@@ -57,8 +59,16 @@ const loginUserDB = async (payload: { email: string; password: string }) => {
 
   return {
     token: accessToken,
-    user: userWithoutPassword
+    user: userWithoutPassword,
   };
 };
 
-export const userService = { createUserIntoDB, loginUserDB };
+const getUsersFromDB = async () => {
+  const result = await pool.query(`
+     SELECT * FROM users
+    `);
+  delete result.rows[0].password;
+  return result.rows[0];
+};
+
+export const userService = { createUserIntoDB, loginUserDB, getUsersFromDB };

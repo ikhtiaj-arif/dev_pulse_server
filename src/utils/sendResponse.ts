@@ -7,7 +7,7 @@ interface IResponse<T> {
   error?: any;
 }
 
- const sendResponse = <T>(res: Response, data: IResponse<T>,) => {
+const sendResponse = <T>(res: Response, data: IResponse<T>) => {
   res.status(data.status).json({
     success: data.success,
     message: data.message,
