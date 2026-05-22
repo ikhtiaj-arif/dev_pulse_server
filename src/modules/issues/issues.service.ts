@@ -34,22 +34,76 @@ const createIssueIntoDB = async (payload: IIssue, reporterId: string) => {
   return result;
 };
 
-const getIssuesFromDB = async (params: any) => {
-  const result = await pool.query(`
-     SELECT 
+const getIssuesFromDB = async (query: Record<string, unknown>) => {
+
+  //? 1. Extract query parameters
+  const { sort = "newest", type, status } = query;
+
+  // dynamically build WHERE conditions here
+  const conditions: string[] = [];
+
+  // Values array for parameterized queries ($1, $2, ...)
+  const values: unknown[] = [];
+
+  //? 2. Build FILTER conditions
+  // Filter by issue type (bug / feature_request)
+  if (type) {
+    values.push(type); // push value first
+    conditions.push(`issues.type = $${values.length}`); // assign correct placeholder index
+  }
+
+  // Filter by issue status (open / in_progress / resolved)
+  if (status) {
+    values.push(status);
+    conditions.push(`issues.status = $${values.length}`);
+  }
+
+
+  //? 3. Build WHERE clause safely
+  // If no filters are applied, WHERE clause is empty
+  // Otherwise combine all conditions using AND
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+
+  //? 4. Sorting logic 
+  // Default: newest first (DESC)
+  // If sort = oldest → ASC order
+  const orderBy =
+    sort === "oldest"
+      ? `ORDER BY issues.created_at ASC`
+      : `ORDER BY issues.created_at DESC`;
+
+
+  //? 5. Main Query
+  // correlated subquery to fetch reporter info
+  // Instead of JOIN, we fetch user per issue row
+  const queryText = `
+    SELECT 
       issues.*,
-      json_build_object(
-        'id', users.id,
-        'name', users.name,
-        'role', users.role
+
+      (
+        SELECT json_build_object(
+          'id', users.id,
+          'name', users.name,
+          'role', users.role
+        )
+        FROM users
+        WHERE users.id = issues.reporter_id
       ) AS reporter
-    FROM issues 
-    LEFT JOIN users ON issues.reporter_id = users.id
-        
-        `);
+
+    FROM issues
+    ${whereClause}
+    ${orderBy}
+  `;
+
+  //? 6. Execute query
+  // values[] automatically maps to $1, $2, ...
+  const result = await pool.query(queryText, values);
 
   return result.rows;
 };
+
 const getSingleIssueFromDB = async (id: string) => {
   const result = await pool.query(
     `
@@ -74,7 +128,7 @@ const getSingleIssueFromDB = async (id: string) => {
 };
 const updateIssueDB = async (payload: any, id: string) => {
   //   return { payload, id };
-  const {title, status, type, description, userId} = payload
+  const { title, status, type, description, userId } = payload;
 
   const issueToUpdate = await pool.query(
     `
@@ -86,14 +140,14 @@ const updateIssueDB = async (payload: any, id: string) => {
 
   if (issueToUpdate.rows.length === 0) throw new Error("Issue not found");
 
-  if (issueToUpdate.rows[0].reporter_id !== userId)
-    throw new Error("Access denied");
+  // if (issueToUpdate.rows[0].reporter_id !== userId)
+  //   throw new Error("Access denied");
 
   if (issueToUpdate.rows[0].status !== ISSUE_STATUS.open)
     throw new Error("Issue not open");
 
-
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     
     UPDATE issues
     SET
@@ -105,26 +159,28 @@ const updateIssueDB = async (payload: any, id: string) => {
     WHERE id=$5 RETURNING *
 
 
-    `,[title, description, type, status, id])
-
-
+    `,
+    [title, description, type, status, id],
+  );
 
   return result;
 };
 
-const deleteIssueFromDB = async(id:string) => {
-    const result = await pool.query(`
+const deleteIssueFromDB = async (id: string) => {
+  const result = await pool.query(
+    `
         DELETE FROM issues WHERE id=$1
-        `,[id])
+        `,
+    [id],
+  );
 
-        return result
-}
-
-
+  return result;
+};
 
 export const issuesService = {
   createIssueIntoDB,
   getIssuesFromDB,
   getSingleIssueFromDB,
-  updateIssueDB,deleteIssueFromDB
+  updateIssueDB,
+  deleteIssueFromDB,
 };

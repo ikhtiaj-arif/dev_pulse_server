@@ -25,8 +25,8 @@ export const initDB = async () => {
       id SERIAL PRIMARY KEY,
       title VARCHAR(150),
       description TEXT,
-      type VARCHAR(10) DEFAULT 'bug',
-      status VARCHAR(10) DEFAULT 'open',
+      type VARCHAR(20) DEFAULT 'bug',
+      status VARCHAR(20) DEFAULT 'open',
 
       reporter_id INT REFERENCES users(id) ON DELETE CASCADE,
 
