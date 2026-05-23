@@ -128,7 +128,7 @@ const getSingleIssueFromDB = async (id: string) => {
 };
 const updateIssueDB = async (payload: any, id: string) => {
   //   return { payload, id };
-  const { title, status, type, description, userId } = payload;
+  const { title, status, type, description, user } = payload;
 
   const issueToUpdate = await pool.query(
     `
@@ -139,12 +139,19 @@ const updateIssueDB = async (payload: any, id: string) => {
   );
 
   if (issueToUpdate.rows.length === 0) throw new Error("Issue not found");
+  const issue = issueToUpdate.rows[0]
 
-  // if (issueToUpdate.rows[0].reporter_id !== userId)
-  //   throw new Error("Access denied");
+ //! If maintainer update all issue, else own issue only when status === open
 
-  if (issueToUpdate.rows[0].status !== ISSUE_STATUS.open)
-    throw new Error("Issue not open");
+    if (user.role !== "maintainer") {
+    // If the user is just a contributor, enforce these strict rules:
+    if (issue.reporter_id !== user.id) {
+        throw new Error("Access denied");
+    }
+    if (issue.status !== ISSUE_STATUS.open) {
+        throw new Error("Issue not open");
+    }
+  }
 
   const result = await pool.query(
     `
@@ -154,7 +161,8 @@ const updateIssueDB = async (payload: any, id: string) => {
     title=COALESCE($1,title),
     description=COALESCE($2,description),
     type=COALESCE($3,type),
-    status=COALESCE($4, status)
+    status=COALESCE($4, status),
+    updated_at = NOW()
 
     WHERE id=$5 RETURNING *
 

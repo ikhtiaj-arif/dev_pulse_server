@@ -51,7 +51,7 @@ const getSingleIssue = async (req: Request, res: Response) => {
     const result = await issuesService.getSingleIssueFromDB(id as string);
 
     if (result.rows.length === 0) {
-      sendResponse((res = res), {
+     return sendResponse((res = res), {
         status: 404,
         success: false,
         message: "Issue not found",
@@ -78,7 +78,7 @@ const updateIssue = async (req: Request, res: Response) => {
   try {
     const { id: issueId } = req.params;
     const { id: userId } = req.user as JwtPayload;
-    const payload = { userId, ...req.body };
+    const payload = { user: req.user, ...req.body };
 
     const result = await issuesService.updateIssueDB(
       payload,
@@ -88,7 +88,7 @@ const updateIssue = async (req: Request, res: Response) => {
       status: 200,
       success: true,
       //   message: "Issue created successfully",
-      data: result,
+      data: result.rows[0],
     });
   } catch (error: any) {
     sendResponse((res = res), {
@@ -105,7 +105,7 @@ const deleteIssue = async (req: Request, res: Response) => {
 
     const result = await issuesService.deleteIssueFromDB(id as string);
     if (result.rowCount === 0) {
-      sendResponse((res = res), {
+      return sendResponse((res = res), {
         status: 404,
         success: false,
         message: "Issue not found",
