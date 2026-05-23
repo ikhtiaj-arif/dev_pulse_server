@@ -7,6 +7,10 @@ import config from "./config";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import { userRouter } from "./modules/auth/auth.routes";
 import { issuesRouter } from "./modules/issues/issues.routes";
+import { initDB } from "./_db";
+
+initDB();
+
 
 const app: Application = express();
 const port = config.port;

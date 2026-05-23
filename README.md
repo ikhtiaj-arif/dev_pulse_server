@@ -2,7 +2,7 @@
 
 DevPulse is a robust backend service designed for issue tracking and management. Built with Express, TypeScript, and PostgreSQL, it features secure role-based access control, allowing teams to effectively organize and resolve their technical tasks.
 
-**Live URL**: 
+**Live URL**: https://dev-pulse-server.vercel.app/
 
 ## Features
 
